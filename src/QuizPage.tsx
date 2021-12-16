@@ -1,6 +1,6 @@
 import React, {useCallback} from 'react';
-import {useCurrentQuestion} from "./hooks";
 import {Spinner} from "./components/Spinner";
+import {useCurrentQuestion} from "./hooks";
 
 interface QuizPageProps {
     quizId: number;

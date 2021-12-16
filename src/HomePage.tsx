@@ -1,5 +1,6 @@
 import React from 'react';
-import {useHomeForm, useQuizList} from "./hooks";
+import {useQuizList} from "./hooks";
+import {useHomeForm} from "./hooks";
 
 interface HomePageProps {
     onContinue: (name: string, quizId: number) => void;
