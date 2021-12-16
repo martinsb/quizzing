@@ -21,6 +21,10 @@ To run the app, clone this repo and run `npm install` and then `npm start`. The 
 
 * I created context, `SettingsContext` so that I don't have to drill most common values (user's  name, chosen quiz id) through the components
 
+## Error handling
+
+* Hooks return errors but UI does not really handle them.
+
 ---
 
 # Getting Started with Create React App
