@@ -1,18 +1,9 @@
 import React, {useCallback} from 'react';
 import {useCurrentQuestion} from "./hooks";
-import {Answer, Question} from "./model";
 
 interface QuizPageProps {
     quizId: number;
     onFinish: (responses: number[]) => void;
-}
-
-interface State {
-    questions: Question[];
-    currentAnswers: Answer[];
-
-    questionIndex: number;
-    questionTitle: string;
 }
 
 export const QuizPage = ({quizId, onFinish}: QuizPageProps) => {
