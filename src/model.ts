@@ -10,10 +10,6 @@ export interface Question {
     title: string;
 }
 
-export interface QuestionWithAnswers extends Question {
-    answers: Answer[];
-}
-
 export interface Answer {
     id: number;
     title: string;
