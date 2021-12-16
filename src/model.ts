@@ -18,3 +18,9 @@ export interface Answer {
     id: number;
     title: string;
 }
+
+export interface Results {
+    correct: number;
+    total: number;
+}
+

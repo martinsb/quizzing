@@ -8,26 +8,28 @@ import {
     useRef,
     useState
 } from "react";
-import {Answer, Question, Quiz} from "./model";
+import {Answer, Question, Quiz, Results} from "./model";
 
 const API_QUIZZES_ENDPOINT = 'https://printful.com/test-quiz.php?action=quizzes';
 const API_QUESTIONS_ENDPOINT = 'https://printful.com/test-quiz.php?action=questions&quizId=:quizId:';
 const API_ANSWERS_ENDPOINT = 'https://printful.com/test-quiz.php?action=answers&quizId=:quizId:&questionId=:questionId:';
+const API_SUBMIT_ENDPOINT = 'https://printful.com/test-quiz.php?action=submit&quizId=:quizId:&:answers:' //answers[]=57737&answers[]=262891
 
 
 async function retrieveData<T>(url: string,
+                               initialData: T,
                                setLoading: (value: boolean) => void,
                                setError: (value: string) => void,
-                               setData: (value: T[]) => void) {
+                               setData: (value: T) => void) {
     setLoading(true);
     setError('');
-    setData([]);
+    setData(initialData);
     try {
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error('Invalid response from API')
         }
-        setData(await response.json() as T[]);
+        setData(await response.json() as T);
     } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Error fetching data');
     } finally {
@@ -35,12 +37,12 @@ async function retrieveData<T>(url: string,
     }
 }
 
-function useApiEndpoint<T>(url: string) {
+function useApiEndpoint<T>(url: string, initialData: T) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [data, setData] = useState<T[]>([]);
+    const [data, setData] = useState<T>(initialData);
     useEffect(() => {
-        retrieveData(url, setLoading, setError, setData);
+        retrieveData(url, initialData, setLoading, setError, setData);
     }, [url]);
     return {
         loading,
@@ -50,23 +52,28 @@ function useApiEndpoint<T>(url: string) {
 }
 
 export function useQuizList() {
-    return useApiEndpoint<Quiz>(API_QUIZZES_ENDPOINT);
+    return useApiEndpoint<Quiz[]>(API_QUIZZES_ENDPOINT, []);
 }
 
 type QuizState = {
+    finished: boolean;
     questions: Question[];
     answers: Answer[];
+    responses: number[];
     questionIndex: number;
 };
 type QuizAction =
 | {type: 'clear'}
 | {type: 'questions-loaded', payload: {questions: Question[]}}
 | {type: 'answers-loaded', payload: {answers: Answer[]}}
-| {type: 'next-question'};
+| {type: 'submit-response'}
+| {type: 'respond-question', payload: {answerId: number}};
 
 const initialState: QuizState = {
+    finished: false,
     questions: [],
     answers: [],
+    responses: [],
     questionIndex: 0,
 }
 
@@ -82,14 +89,43 @@ const questionsReducer = (state: QuizState, action: QuizAction) => {
                 ...state,
                 questions: action.payload.questions,
                 answers: [],
+                responses: [],
+            };
+        }
+        case 'answers-loaded': {
+            return {
+                ...state,
+                answers: action.payload.answers,
+            };
+        }
+        case 'submit-response': {
+            const nextIndex = state.questionIndex + 1;
+            return {
+                ...state,
+                questionIndex: nextIndex < state.questions.length ? nextIndex : (state.questions.length - 1),
+                finished: nextIndex === state.questions.length,
+            };
+        }
+        case 'respond-question': {
+            const {answers} = state;
+            if (!answers.find(({id}) => id === action.payload.answerId)) {
+                //sanity check, should never happen
+                throw new Error('Invalid answer ID');
+            }
+            const responses = [...state.responses];
+            responses[state.questionIndex] = action.payload.answerId;
+            return {
+                ...state,
+                responses,
             };
         }
     }
     return state;
 }
-export function useCurrentQuestion(quizId: number) {
+
+export function useCurrentQuestion(quizId: number, onFinish: (responses: number[]) => void) {
     const [state, dispatch] = useReducer(questionsReducer, initialState);
-    const {questions, questionIndex, answers} = state;
+    const {finished, questions, questionIndex, answers, responses} = state;
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const setQuestions = useCallback((value: Question[]) => {
@@ -108,9 +144,23 @@ export function useCurrentQuestion(quizId: number) {
             }
         });
     }, [dispatch]);
+    const submitResponse = useCallback(() => {
+        dispatch({
+            type: 'submit-response',
+        });
+    }, [dispatch]);
+    const respondQuestion = useCallback((answerId: number) => {
+        dispatch({
+            type: 'respond-question',
+            payload: {
+                answerId,
+            },
+        })
+    }, [dispatch]);
+
     useEffect(() => {
         const url = API_QUESTIONS_ENDPOINT.replace(':quizId:', '' + quizId);
-        retrieveData(url, setLoading, setError, setQuestions);
+        retrieveData(url, [], setLoading, setError, setQuestions);
     }, [quizId, setQuestions]);
     useEffect(() => {
         if (questions.length === 0) {
@@ -119,14 +169,24 @@ export function useCurrentQuestion(quizId: number) {
         const url = API_ANSWERS_ENDPOINT
             .replace(':quizId:','' + quizId)
             .replace(':questionId:', '' + questions[questionIndex].id);
-        retrieveData(url, setLoading, setError, setAnswers);
+        retrieveData(url, [], setLoading, setError, setAnswers);
     }, [quizId, questions, questionIndex, setAnswers]);
+
+    useEffect(() => {
+        if (finished) {
+            onFinish(responses)
+        }
+    }, [responses, finished, onFinish]);
 
     return {
         loading,
         error,
         questionTitle: questions[questionIndex]?.title ?? '',
         answers,
+        progress: questions.length > 0 ? (questionIndex / questions.length * 100) : 0,
+        submitResponse,
+        respondQuestion,
+        currentResponse: responses[questionIndex] !== undefined ? responses[questionIndex] : undefined,
     };
 }
 
@@ -163,4 +223,9 @@ export function useHomeForm(onSubmitted: (name: string, quizId: number) => void)
         errors: formErrors,
         handleSubmit,
     };
+}
+
+export function useResults(quizId: number, responses: number[]) {
+    const url = API_SUBMIT_ENDPOINT.replace(':quizId', '' + quizId).replace(':answers:', responses.map(id => 'answers[]=' + id).join('&'));
+    return useApiEndpoint<Results | undefined>(url, undefined);
 }
