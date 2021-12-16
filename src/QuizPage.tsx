@@ -1,5 +1,6 @@
 import React, {useCallback} from 'react';
 import {useCurrentQuestion} from "./hooks";
+import {Spinner} from "./components/Spinner";
 
 interface QuizPageProps {
     quizId: number;
@@ -8,7 +9,8 @@ interface QuizPageProps {
 
 export const QuizPage = ({quizId, onFinish}: QuizPageProps) => {
     const {
-        loading,
+        loadingQuestions,
+        loadingAnswers,
         error,
         questionTitle,
         answers,
@@ -20,11 +22,13 @@ export const QuizPage = ({quizId, onFinish}: QuizPageProps) => {
 
     return (
         <div>
-            <h1>{questionTitle}</h1>
-            {answers.length > 0 &&
-                <ul>
+            {loadingQuestions && <Spinner />}
+            <h2>{questionTitle}</h2>
+            {loadingAnswers && <Spinner />}
+            {answers.length > 0 && (
+                <ul className="QuizPage-answers">
                     {answers.map(({id, title}) => (
-                        <li key={id}>
+                        <li key={id} className="QuizPage-answer">
                             <input type="radio"
                                    value={id}
                                    checked={currentResponse === id}
@@ -36,7 +40,7 @@ export const QuizPage = ({quizId, onFinish}: QuizPageProps) => {
                         </li>
                     ))}
                 </ul>
-            }
+            )}
             <progress max="100" value={progress} />
             <button onClick={submitResponse} disabled={!currentResponse}>{'Next question'}</button>
         </div>

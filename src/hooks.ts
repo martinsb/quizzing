@@ -126,7 +126,8 @@ const questionsReducer = (state: QuizState, action: QuizAction) => {
 export function useCurrentQuestion(quizId: number, onFinish: (responses: number[]) => void) {
     const [state, dispatch] = useReducer(questionsReducer, initialState);
     const {finished, questions, questionIndex, answers, responses} = state;
-    const [loading, setLoading] = useState(false);
+    const [loadingQuestions, setLoadingQuestions] = useState(false);
+    const [loadingAnswers, setLoadingAnswers] = useState(false);
     const [error, setError] = useState('');
     const setQuestions = useCallback((value: Question[]) => {
         dispatch({
@@ -160,7 +161,7 @@ export function useCurrentQuestion(quizId: number, onFinish: (responses: number[
 
     useEffect(() => {
         const url = API_QUESTIONS_ENDPOINT.replace(':quizId:', '' + quizId);
-        retrieveData(url, [], setLoading, setError, setQuestions);
+        retrieveData(url, [], setLoadingQuestions, setError, setQuestions);
     }, [quizId, setQuestions]);
     useEffect(() => {
         if (questions.length === 0) {
@@ -169,7 +170,7 @@ export function useCurrentQuestion(quizId: number, onFinish: (responses: number[
         const url = API_ANSWERS_ENDPOINT
             .replace(':quizId:','' + quizId)
             .replace(':questionId:', '' + questions[questionIndex].id);
-        retrieveData(url, [], setLoading, setError, setAnswers);
+        retrieveData(url, [], setLoadingAnswers, setError, setAnswers);
     }, [quizId, questions, questionIndex, setAnswers]);
 
     useEffect(() => {
@@ -179,7 +180,8 @@ export function useCurrentQuestion(quizId: number, onFinish: (responses: number[
     }, [responses, finished, onFinish]);
 
     return {
-        loading,
+        loadingQuestions,
+        loadingAnswers,
         error,
         questionTitle: questions[questionIndex]?.title ?? '',
         answers,

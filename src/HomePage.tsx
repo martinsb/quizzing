@@ -20,7 +20,7 @@ export const HomePage = ({onContinue}: HomePageProps) => {
                     <input ref={nameInputRef} type="text" placeholder={'Enter your name'} />
                     <br/>
                     {formErrors.quiz && <p>{formErrors.quiz}</p>}
-                    <select ref={quizSelectRef}>
+                    <select ref={quizSelectRef} aria-busy={loading}>
                         <option key={''} value="">{'Choose test'}</option>
                         {quizzes?.map(({id, title}) => (
                             <option key={id} value={id}>{title}</option>

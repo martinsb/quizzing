@@ -1,3 +1,28 @@
 .App {
-    margin: 0 20px;
+    margin: 20px;
+}
+
+ul.QuizPage-answers,
+ul.QuizPage-answers li {
+    list-style: none;
+}
+
+.QuizPage-answers {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.QuizPage-answer {
+    flex: 1 0 100%;
+}
+
+progress {
+    margin-top: var(--typography-spacing-vertical);
+}
+
+@media (min-width:480px) {
+    .QuizPage-answer {
+        flex-basis: 50%;
+    }
 }
