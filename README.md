@@ -1,3 +1,28 @@
+# Greetings!
+
+To run the app, clone this repo and run `npm install` and then `npm start`. The app should be served on [localhost:3000](https://localhost:3000).
+
+## Some general notes
+
+* First of all, I'm sorry I did this in React. I know that you folks are more on the Vue side, but unfortunately I know nothing about Vue except reading through some introductions
+* This project is created with [CRA](https://github.com/facebook/create-react-app) with some unneeded stuff (like tests :) deleted.
+* I'm not very artistic person, thus mostly my "styling" relied on merely adding [purecss](https://purecss.io/) framework. The only noteworthy thing I did was making answer grid responsive (per task description), anything else is just adding some margins
+* I intentionally did not use [styled-components](https://styled-components.com/) because, since you prefer Vue, I thought more React-ish frameworks added would be too much.
+* I used provided API endpoints from the link in the task description
+* I love HTML and tried to keep it as simple as possible, also because of the lack of time to style things more properly.
+
+## Hooks
+
+* I love hooks. I encapsulated all the quiz, questions, and answer loading logic into them. Thanks to hooks, I don't need to use [Redux](https://redux.js.org/) anymore :)
+* The most complicated hook turned out to be `useCurrentQuestion`. I figured it would be a good idea to not expose all questions to the view, only the current one with all the answers which required additional loading from the API when `questionIndex` state field (`useReducer`) changes.
+* There is an internal module called, well, `internal.ts` that contains two utilities for fetching data. Their usage depends on the context - as you can see in `useQuizList` (for example) it was quite easy to just forward the call to `useApiEndpoint` internal hook but in more complicated cases I used the more "low-level" `retrieveData`
+
+## Contexts
+
+* I created context, `SettingsContext` so that I don't have to drill most common values (user's  name, chosen quiz id) through the components
+
+---
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
