@@ -1,5 +1,4 @@
 import React, {useCallback, useState} from 'react';
-import './App.css';
 import {HomePage} from "./HomePage";
 import {SettingsProvider} from "./SettingsContext";
 import {AppState} from "./model";
